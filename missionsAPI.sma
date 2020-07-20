@@ -30,7 +30,7 @@ public plugin_init()
     register_plugin(PLUGIN, VERSION, AUTHOR)
 
     gForwardClientMissionDone = CreateMultiForward("mg_fw_client_mission_done", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, missionPrizeExp
-    gForwardClientMissionAvailable = CreateMultiForward("mg_fw_client_mission_available", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, unlockerMissionId
+    gForwardClientMissionAvailable = CreateMultiForward("mg_fw_client_mission_unlocked", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, unlockerMissionId
 
     serverLoadMissionList()
 }
@@ -50,9 +50,9 @@ public plugin_natives()
 
     register_native("mg_missions_arrayid_get", "native_arrayid_get")
 
-    register_native("mg_missions_mpoint_set", "native_mpoint_set")
-    register_native("mg_missions_mpoint_get", "native_mpoint_get")
-    register_native("mg_missions_mpoint_add", "native_mpoint_add")
+    register_native("mg_missions_client_mpoint_set", "native_client_mpoint_set")
+    register_native("mg_missions_client_mpoint_get", "native_client_mpoint_get")
+    register_native("mg_missions_client_mpoint_add", "native_client_mpoint_add")
 
     register_native("mg_missions_client_status_set", "native_client_status_set")
     register_native("mg_missions_client_status_get", "native_client_status_get")
@@ -182,7 +182,7 @@ public native_arrayid_get(plugin_id, param_num)
         set_param_byref(8, int:arrayMissionPrizeMP)
 }
 
-public native_mpoint_set(plugin_id, param_num)
+public native_client_mpoint_set(plugin_id, param_num)
 {
     new id = get_param(1)
 
@@ -196,7 +196,7 @@ public native_mpoint_set(plugin_id, param_num)
     return true
 }
 
-public native_mpoint_get(plugin_id, param_num)
+public native_client_mpoint_get(plugin_id, param_num)
 {
     new id = get_param(1)
 
@@ -206,7 +206,7 @@ public native_mpoint_get(plugin_id, param_num)
     return gMissionPoints[id]
 }
 
-public native_mpoint_add(plugin_id, param_num)
+public native_client_mpoint_add(plugin_id, param_num)
 {
     new id = get_param(1)
     
