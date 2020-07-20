@@ -20,10 +20,13 @@ new Array:arrayMissionTargetValue
 new Array:arrayMissionPrizeExp
 new Array:arrayMissionPrizeMP
 
+new gForwardClientMissionDone, gForwardClientMissionAvailable
 
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR)
+
+    gForwardClientMissionDone = CreateMultiForward("mg_fw_client_mission_done", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)
 
     serverLoadMissionList()
 }
