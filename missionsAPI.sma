@@ -20,9 +20,12 @@ new Array:arrayMissionTargetValue
 new Array:arrayMissionPrizeExp
 new Array:arrayMissionPrizeMP
 
+
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR)
+
+    serverLoadMissionList()
 }
 
 public plugin_natives()
@@ -38,7 +41,12 @@ public plugin_natives()
     arrayMissionPrizeExp = ArrayCreate(1)
     arrayMissionPrizeMP = ArrayCreate(1)
 
-    serverLoadMissionList()
+    register_native("mg_missions_client_status_set", "native_client_status_set")
+    register_native("mg_missions_client_status_get", "native_client_status_get")
+
+    register_native("mg_missions_client_value_set", "native_client_value_set")
+    register_native("mg_missions_client_value_get", "native_client_value_get")
+    register_native("mg_missions_client_value_add", "native_client_value_add")
 }
 
 public sqlLoadMissionListHandle(FailState, Handle:Query, error[], errorcode, data[], datasize, Float:fQueueTime)
@@ -126,12 +134,102 @@ public sqlAddMissionStatusHandle(FailState, Handle:Query, error[], errorcode, da
 	}
 }
 
+public native_client_status_set(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return false
+
+    new lMissionId = get_param(2)
+
+    if(ArrayFindValue(arrayMissionId, lMissionId) == -1)
+        return false
+    
+    new lStatus = get_param(3)
+
+    gMissionStatus[id][lMissionId] = lStatus
+    
+    return true
+}
+
+public native_client_status_get(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return false
+
+    new lMissionId = get_param(2)
+
+    return gMissionStatus[id][lMissionId]
+}
+
+public native_client_value_set(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return false
+
+    new lMissionId = get_param(2)
+
+    if(ArrayFindValue(arrayMissionId, lMissionId) == -1)
+        return false
+
+    new lMissionValue = get_param(3)
+
+    gMissionValue[id][lMissionId] = lMissionValue
+
+    return true
+}
+
+public native_client_value_get(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return false
+
+    new lMissionId = get_param(2)
+
+    return gMissionValue[id][lMissionId]
+}
+
+public native_client_value_add(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return false
+
+    new lMissionId = get_param(2)
+
+    if(ArrayFindValue(arrayMissionId, lMissionId) == -1)
+        return false
+    
+    new lMissionValue = get_param(3)
+
+    gMissionValue[id][lMissionId] += lMissionValue
+
+    return gMissionValue[id][lMissionId]
+}
+
 public mg_fw_client_login_process(id, accountId)
 {
     userLoadMissionStatus(id, accountId)
 
     mg_reg_user_sqlload_start(id, MG_SQLID_MISSIONS)
     return PLUGIN_HANDLED
+}
+
+public mg_fw_client_clean(id)
+{
+    for(new i; i < MISSIONID_BLOCKSIZE; i++)
+    {
+        gMissionStatus[id][i] = 0
+        gMissionValue[id][i] = 0
+    }
 }
 
 serverLoadMissionList()
