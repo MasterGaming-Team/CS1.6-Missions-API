@@ -147,6 +147,14 @@ public sqlAddMissionStatusHandle(FailState, Handle:Query, error[], errorcode, da
 	}
 }
 
+public sqlUpdateClientMissonsHandle(FailState, Handle:Query, error[], errorcode, data[], datasize, Float:fQueueTime)
+{
+    if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
+	{
+		log_amx("%s", error)
+	}
+}
+
 public native_arrayid_get(plugin_id, param_num)
 {
     if(get_param(1) != -1)
@@ -299,6 +307,25 @@ public mg_fw_client_login_process(id, accountId)
 
     mg_reg_user_sqlload_start(id, MG_SQLID_MISSIONS)
     return PLUGIN_HANDLED
+}
+
+public mg_fw_client_sql_save(id, accountId)
+{
+    new lSqlTxt[1024], len
+    new lArraySize = ArraySize(arrayMissionId)
+    new lMissionId
+
+    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "UPDATE missionList SET")
+    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "accountMP = ^"%d^"", gMissionPoints[id])
+    for(new i; i < lArraySize; i++)
+    {
+        lMissionId = ArrayGetCell(arrayMissionId, i)
+
+        len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, ", mission%dDone = ^"%d^"", lMissionId, gMissionStatus[id][lMissionId])
+        len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, ", mission%dValue = ^"%d^"", lMissionId, gMissionValue[id][lMissionId])
+    }
+    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, ";")
+    SQL_ThreadQuery(gSqlMissionTuple, "sqlUpdateClientMissonsHandle", lSqlTxt)
 }
 
 public mg_fw_client_clean(id)
