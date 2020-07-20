@@ -91,10 +91,29 @@ public sqlLoadMissionStatusHandle(FailState, Handle:Query, error[], errorcode, d
         return
     }
 
+    new lArraySize = ArraySize(arrayMissionId)
+    new lMissionId
+    new lUserMStatusName[32]
+    new lUserMValueName[32]
 
+    for(new i; i < lArraySize; i++)
+    {
+        lMissionId = ArrayGetCell(arrayMissionId, i)
+
+        lUserMStatusName[0] = EOS
+        lUserMValueName[0] = EOS
+
+        formatex(lUserMStatusName, charsmax(lUserMStatusName), "mission%dDone", lMissionId)
+        formatex(lUserMValueName, charsmax(lUserMValueName), "mission%dValue", lMissionId)
+
+        gMissionStatus[id][lMissionId] = SQL_ReadResult(Query, SQL_FieldNameToNum(Query, lUserMStatusName))
+        gMissionValue[id][lMissionId] = SQL_ReadResult(Query, SQL_FieldNameToNum(Query, lUserMValueName))
+    }
+
+    mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
 }
 
-public sqlLoadMissionStatusHandle(FailState, Handle:Query, error[], errorcode, data[], datasize, Float:fQueueTime)
+public sqlAddMissionStatusHandle(FailState, Handle:Query, error[], errorcode, data[], datasize, Float:fQueueTime)
 {
     new id = data[0]
     new accountId = data[1]
