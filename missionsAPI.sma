@@ -22,11 +22,14 @@ new Array:arrayMissionPrizeMP
 
 new gForwardClientMissionDone, gForwardClientMissionAvailable
 
+new retValue
+
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR)
 
-    gForwardClientMissionDone = CreateMultiForward("mg_fw_client_mission_done", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)
+    gForwardClientMissionDone = CreateMultiForward("mg_fw_client_mission_done", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, missionPrizeExp
+    gForwardClientMissionAvailable = CreateMultiForward("mg_fw_client_mission_available", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, unlockerMissionId
 
     serverLoadMissionList()
 }
@@ -304,4 +307,39 @@ userAddMissionStatus(id, acountId)
 	SQL_ThreadQuery(gSqlMissionTuple, "sqlAddMissionStatusHandle", lSqlTxt, data, 2)
 	
 	return true
+}
+
+userCheckMissionStatus(id, missionId)
+{
+    if(!mg_reg_user_loggedin(id))
+        return
+
+    if(gMissionStatus[id][missionId])
+        return
+    
+    new lArrayId = ArrayFindValue(arrayMissionId, missionId)
+
+    if(lArrayId == -1)
+        return
+    
+    if(gMissionValue[id][missionId] >= ArrayGetCell(arrayMissionTargetValue, lArrayId))
+    {
+        gMissionStatus[id][missionId] = 1
+        ExecuteForward(gForwardClientMissionDone, retValue, id, missionId, ArrayGetCell(arrayMissionPrizeExp, lArrayId))
+        checkLockedMissions(id, missionId, lArrayId)
+    }
+}
+
+checkLockedMissions(id, missionId, arrayId) // Basically called when a mission has been done
+{
+    if(!mg_reg_user_loggedin(id))
+        return
+    
+    new lArraySize = ArraySize(arrayMissionId)
+
+    for(new i; i < lArraySize; i++)
+    {
+        if(ArrayGetCell(arrayMissionRequired, arrayId) == missionId)
+            ExecuteForward(gForwardClientMissionAvailable, retValue, id, ArrayGetCell(arrayMissionId, i), missionId)
+    }
 }
