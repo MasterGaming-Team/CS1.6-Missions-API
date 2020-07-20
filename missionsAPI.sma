@@ -41,6 +41,8 @@ public plugin_natives()
     arrayMissionPrizeExp = ArrayCreate(1)
     arrayMissionPrizeMP = ArrayCreate(1)
 
+    register_native("mg_missions_arrayid_get", "native_arrayid_get")
+
     register_native("mg_missions_client_status_set", "native_client_status_set")
     register_native("mg_missions_client_status_get", "native_client_status_get")
 
@@ -132,6 +134,33 @@ public sqlAddMissionStatusHandle(FailState, Handle:Query, error[], errorcode, da
 		mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
 		return
 	}
+}
+
+public native_arrayid_get(plugin_id, param_num)
+{
+    if(get_param(1) != -1)
+        set_param_byref(1, int:arrayMissionId)
+
+    if(get_param(2) != -1)
+        set_param_byref(2, int:arrayMissionName)
+        
+    if(get_param(3) != -1)
+        set_param_byref(3, int:arrayMissionDesc)
+        
+    if(get_param(4) != -1)
+        set_param_byref(4, int:arrayMissionRequired)
+        
+    if(get_param(5) != -1)
+        set_param_byref(5, int:arrayMissionNext)
+        
+    if(get_param(6) != -1)
+        set_param_byref(6, int:arrayMissionTargetValue)
+        
+    if(get_param(7) != -1)
+        set_param_byref(7, int:arrayMissionPrizeExp)
+        
+    if(get_param(8) != -1)
+        set_param_byref(8, int:arrayMissionPrizeMP)
 }
 
 public native_client_status_set(plugin_id, param_num)
