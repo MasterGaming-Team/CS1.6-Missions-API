@@ -8,6 +8,7 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Vieni"
 
+new gMissionPoints[33]
 new gMissionStatus[33][MISSIONID_BLOCKSIZE]
 new gMissionValue[33][MISSIONID_BLOCKSIZE]
 
@@ -48,6 +49,10 @@ public plugin_natives()
     arrayMissionPrizeMP = ArrayCreate(1)
 
     register_native("mg_missions_arrayid_get", "native_arrayid_get")
+
+    register_native("mg_missions_mpoint_set", "native_mpoint_set")
+    register_native("mg_missions_mpoint_get", "native_mpoint_get")
+    register_native("mg_missions_mpoint_add", "native_mpoint_add")
 
     register_native("mg_missions_client_status_set", "native_client_status_set")
     register_native("mg_missions_client_status_get", "native_client_status_get")
@@ -169,6 +174,44 @@ public native_arrayid_get(plugin_id, param_num)
         set_param_byref(8, int:arrayMissionPrizeMP)
 }
 
+public native_mpoint_set(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return false
+
+    new lMissionPoints = get_param(2)
+
+    gMissionPoints[id] = lMissionPoints
+
+    return true
+}
+
+public native_mpoint_get(plugin_id, param_num)
+{
+    new id = get_param(1)
+
+    if(!mg_reg_user_loggedin(id))
+        return 0
+
+    return gMissionPoints[id]
+}
+
+public native_mpoint_add(plugin_id, param_num)
+{
+    new id = get_param(1)
+    
+    if(!mg_reg_user_loggedin(id))
+        return 0
+
+    new lMissionPoints = get_param(2)
+
+    gMissionPoints[id] += lMissionPoints
+    
+    return gMissionPoints[id]
+}
+
 public native_client_status_set(plugin_id, param_num)
 {
     new id = get_param(1)
@@ -262,6 +305,7 @@ public mg_fw_client_clean(id)
 {
     for(new i; i < MISSIONID_BLOCKSIZE; i++)
     {
+        gMissionPoints[id][i] = 0
         gMissionStatus[id][i] = 0
         gMissionValue[id][i] = 0
     }
