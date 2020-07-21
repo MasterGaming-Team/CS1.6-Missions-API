@@ -397,6 +397,7 @@ userCheckMissionStatus(id, missionId)
     {
         gMissionStatus[id][missionId] = 1
         ExecuteForward(gForwardClientMissionDone, retValue, id, missionId, ArrayGetCell(arrayMissionPrizeExp, lArrayId))
+        gMissionValue[id][ArrayGetCell(arrayMissionNext, lArrayId)] += gMissionValue[id][missionId]
         checkLockedMissions(id, missionId, lArrayId)
     }
 }
