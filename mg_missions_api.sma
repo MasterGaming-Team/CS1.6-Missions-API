@@ -9,6 +9,8 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Vieni"
 
+new Handle:gSqlMissionTuple
+
 new gMissionPoints[33]
 new gMissionStatus[33][MISSIONID_BLOCKSIZE]
 new gMissionValue[33][MISSIONID_BLOCKSIZE]
@@ -67,11 +69,11 @@ public plugin_natives()
 
 public sqlLoadMissionListHandle(FailState, Handle:Query, error[], errorcode, data[], datasize, Float:fQueueTime)
 {
-	if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
+    if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
 	{
-		log_amx("%s", error)
+        log_amx("%s", error)
         pause("d")
-		return
+        return
 	}
 
     new lMissionName[64], lMissionDesc[64]
@@ -103,7 +105,7 @@ public sqlLoadMissionStatusHandle(FailState, Handle:Query, error[], errorcode, d
     new id = data[0]
     new accountId = data[1]
 
-	if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
+    if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
 	{
 		log_amx("%s", error)
 		mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
@@ -248,6 +250,7 @@ public native_client_status_set(plugin_id, param_num)
     new lStatus = get_param(3)
 
     gMissionStatus[id][lMissionId] = lStatus
+    userCheckMissionStatus(id, lMissionId)
     
     return true
 }
@@ -277,7 +280,7 @@ public native_client_value_set(plugin_id, param_num)
     if(lArrayId == -1)
         return false
 
-     new lMissionServer = ArrayGetCell(arrayMissionServer, lArrayId)
+    new lMissionServer = ArrayGetCell(arrayMissionServer, lArrayId)
 
     if(isMissionServerInvalid(lMissionServer))
         return false
@@ -285,6 +288,7 @@ public native_client_value_set(plugin_id, param_num)
     new lMissionValue = get_param(3)
 
     gMissionValue[id][lMissionId] = lMissionValue
+    userCheckMissionStatus(id, lMissionId)
 
     return true
 }
@@ -322,6 +326,7 @@ public native_client_value_add(plugin_id, param_num)
     new lMissionValue = get_param(3)
 
     gMissionValue[id][lMissionId] += lMissionValue
+    userCheckMissionStatus(id, lMissionId)
 
     return gMissionValue[id][lMissionId]
 }
@@ -355,9 +360,10 @@ public mg_fw_client_sql_save(id, accountId)
 
 public mg_fw_client_clean(id)
 {
+    gMissionPoints[id] = 0
+
     for(new i; i < MISSIONID_BLOCKSIZE; i++)
     {
-        gMissionPoints[id][i] = 0
         gMissionStatus[id][i] = 0
         gMissionValue[id][i] = 0
     }
@@ -367,7 +373,7 @@ serverLoadMissionList()
 {
 	new lSqlTxt[250]
 
-	formatex(lSqlTxt, charsmax(lSqlTxt), "SELECT * FROM missionList;", accountId)
+	formatex(lSqlTxt, charsmax(lSqlTxt), "SELECT * FROM missionList;")
 	SQL_ThreadQuery(gSqlMissionTuple, "sqlLoadMissionListHandle", lSqlTxt)
 	
 	return
@@ -375,34 +381,34 @@ serverLoadMissionList()
 
 userLoadMissionStatus(id, accountId)
 {
-	if(!is_user_connected(id))
+    if(!is_user_connected(id))
 		return false
 	
-	new lSqlTxt[250], data[2]
+    new lSqlTxt[250], data[2]
 	
-	data[0] = id
+    data[0] = id
     data[1] = accountId
 	
-	formatex(lSqlTxt, charsmax(lSqlTxt), "SELECT * FROM accountStatus WHERE accountId=^"%s^";", accountId)
-	SQL_ThreadQuery(gSqlMissionTuple, "sqlLoadMissionStatusHandle", lSqlTxt, data, 2)
+    formatex(lSqlTxt, charsmax(lSqlTxt), "SELECT * FROM accountStatus WHERE accountId=^"%s^";", accountId)
+    SQL_ThreadQuery(gSqlMissionTuple, "sqlLoadMissionStatusHandle", lSqlTxt, data, 2)
 	
-	return true
+    return true
 }
 
-userAddMissionStatus(id, acountId)
+userAddMissionStatus(id, accountId)
 {
-	if(!is_user_connected(id))
+    if(!is_user_connected(id))
 		return false
 	
-	new lSqlTxt[250], data[2]
+    new lSqlTxt[250], data[2]
 	
-	data[0] = id
+    data[0] = id
     data[1] = accountId
 	
-	formatex(lSqlTxt, charsmax(lSqlTxt), "INSERT INTO accountStatus (accountId) VALUE (^"%d^");", accountId)
-	SQL_ThreadQuery(gSqlMissionTuple, "sqlAddMissionStatusHandle", lSqlTxt, data, 2)
+    formatex(lSqlTxt, charsmax(lSqlTxt), "INSERT INTO accountStatus (accountId) VALUE (^"%d^");", accountId)
+    SQL_ThreadQuery(gSqlMissionTuple, "sqlAddMissionStatusHandle", lSqlTxt, data, 2)
 	
-	return true
+    return true
 }
 
 userCheckMissionStatus(id, missionId)
@@ -443,7 +449,7 @@ checkLockedMissions(id, missionId, arrayId) // Basically called when a mission h
 
 isMissionServerInvalid(missionServer)
 {
-    if(lMissionServer != MG_SERVER_GLOBAL && lMissionServer != MG_SERVER_CURRENT)
+    if(missionServer != MG_SERVER_GLOBAL && missionServer != MG_SERVER_CURRENT)
         return true
     
     return false
