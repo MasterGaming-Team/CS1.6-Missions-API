@@ -1,5 +1,6 @@
 #include <amxmodx>
 #include <amxmisc>
+#include <mg_core>
 #include <mg_missions_api_const>
 #include <mg_regsystem_api>
 #include <sqlx>
@@ -13,6 +14,7 @@ new gMissionStatus[33][MISSIONID_BLOCKSIZE]
 new gMissionValue[33][MISSIONID_BLOCKSIZE]
 
 new Array:arrayMissionId
+new Array:arrayMissionServer
 new Array:arrayMissionName
 new Array:arrayMissionDesc
 new Array:arrayMissionRequired
@@ -40,6 +42,7 @@ public plugin_natives()
     gSqlMissionTuple = SQL_MakeDbTuple("127.0.0.1", "MG_User", "fKj4zbI0wxwPoFzU", "account_informations")
 
     arrayMissionId = ArrayCreate(1)
+    arrayMissionServer = ArrayCreate(1)
     arrayMissionName = ArrayCreate(64)
     arrayMissionDesc = ArrayCreate(64)
     arrayMissionRequired = ArrayCreate(1)
@@ -81,6 +84,7 @@ public sqlLoadMissionListHandle(FailState, Handle:Query, error[], errorcode, dat
             SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionDesc"), lMissionDesc, charsmax(lMissionDesc))
 
             ArrayPushCell(arrayMissionId, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionId")))
+            ArrayPushCell(arrayMissionServer, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionServer")))
             ArrayPushString(arrayMissionName, lMissionName)
             ArrayPushString(arrayMissionDesc, lMissionDesc)
             ArrayPushCell(arrayMissionRequired, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionRequired")))
@@ -159,27 +163,30 @@ public native_arrayid_get(plugin_id, param_num)
 {
     if(get_param(1) != -1)
         set_param_byref(1, int:arrayMissionId)
-
+    
     if(get_param(2) != -1)
-        set_param_byref(2, int:arrayMissionName)
-        
+        set_param_byref(2, int:arrayMissionServer)
+
     if(get_param(3) != -1)
-        set_param_byref(3, int:arrayMissionDesc)
+        set_param_byref(3, int:arrayMissionName)
         
     if(get_param(4) != -1)
-        set_param_byref(4, int:arrayMissionRequired)
+        set_param_byref(4, int:arrayMissionDesc)
         
     if(get_param(5) != -1)
-        set_param_byref(5, int:arrayMissionNext)
+        set_param_byref(5, int:arrayMissionRequired)
         
     if(get_param(6) != -1)
-        set_param_byref(6, int:arrayMissionTargetValue)
+        set_param_byref(6, int:arrayMissionNext)
         
     if(get_param(7) != -1)
-        set_param_byref(7, int:arrayMissionPrizeExp)
+        set_param_byref(7, int:arrayMissionTargetValue)
         
     if(get_param(8) != -1)
-        set_param_byref(8, int:arrayMissionPrizeMP)
+        set_param_byref(8, int:arrayMissionPrizeExp)
+        
+    if(get_param(9) != -1)
+        set_param_byref(9, int:arrayMissionPrizeMP)
 }
 
 public native_client_mpoint_set(plugin_id, param_num)
@@ -228,10 +235,16 @@ public native_client_status_set(plugin_id, param_num)
         return false
 
     new lMissionId = get_param(2)
+    new lArrayId = ArrayFindValue(arrayMissionId, lMissionId)
 
-    if(ArrayFindValue(arrayMissionId, lMissionId) == -1)
+    if(lArrayId == -1)
         return false
     
+    new lMissionServer = ArrayGetCell(arrayMissionServer, lArrayId)
+
+    if(isMissionServerInvalid(lMissionServer))
+        return false
+
     new lStatus = get_param(3)
 
     gMissionStatus[id][lMissionId] = lStatus
@@ -259,8 +272,14 @@ public native_client_value_set(plugin_id, param_num)
         return false
 
     new lMissionId = get_param(2)
+    new lArrayId = ArrayFindValue(arrayMissionId, lMissionId)
 
-    if(ArrayFindValue(arrayMissionId, lMissionId) == -1)
+    if(lArrayId == -1)
+        return false
+
+     new lMissionServer = ArrayGetCell(arrayMissionServer, lArrayId)
+
+    if(isMissionServerInvalid(lMissionServer))
         return false
 
     new lMissionValue = get_param(3)
@@ -290,8 +309,14 @@ public native_client_value_add(plugin_id, param_num)
         return false
 
     new lMissionId = get_param(2)
+    new lArrayId = ArrayFindValue(arrayMissionId, lMissionId)
 
-    if(ArrayFindValue(arrayMissionId, lMissionId) == -1)
+    if(lArrayId == -1)
+        return false
+
+    new lMissionServer = ArrayGetCell(arrayMissionServer, lArrayId)
+
+    if(isMissionServerInvalid(lMissionServer))
         return false
     
     new lMissionValue = get_param(3)
@@ -414,4 +439,12 @@ checkLockedMissions(id, missionId, arrayId) // Basically called when a mission h
         if(ArrayGetCell(arrayMissionRequired, arrayId) == missionId)
             ExecuteForward(gForwardClientMissionAvailable, retValue, id, ArrayGetCell(arrayMissionId, i), missionId)
     }
+}
+
+isMissionServerInvalid(missionServer)
+{
+    if(lMissionServer != MG_SERVER_GLOBAL && lMissionServer != MG_SERVER_CURRENT)
+        return true
+    
+    return false
 }
