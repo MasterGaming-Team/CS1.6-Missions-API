@@ -39,7 +39,7 @@ public plugin_init()
 
 public plugin_natives()
 {
-    gSqlMissionTuple = SQL_MakeDbTuple("127.0.0.1", "MG_User", "fKj4zbI0wxwPoFzU", "account_informations")
+    gSqlMissionTuple = SQL_MakeDbTuple("127.0.0.1", "MG_User", "fKj4zbI0wxwPoFzU", "cs_global")
 
     arrayMissionId = ArrayCreate(1)
     arrayMissionServer = ArrayCreate(1)
