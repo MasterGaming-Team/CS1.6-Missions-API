@@ -11,6 +11,7 @@
 
 new Handle:gSqlMissionTuple
 
+new bool:gMissionsLoaded[33]
 new gMissionPoints[33]
 new gMissionStatus[33][MISSIONID_BLOCKSIZE]
 new gMissionValue[33][MISSIONID_BLOCKSIZE]
@@ -107,9 +108,10 @@ public sqlLoadMissionStatusHandle(FailState, Handle:Query, error[], errorcode, d
 
     if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
 	{
-		log_amx("%s", error)
-		mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
-		return
+        gMissionsLoaded[id] = false
+        log_amx("%s", error)
+        mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
+        return
 	}
 
     if(!SQL_NumResults(Query))
@@ -137,6 +139,7 @@ public sqlLoadMissionStatusHandle(FailState, Handle:Query, error[], errorcode, d
         gMissionValue[id][lMissionId] = SQL_ReadResult(Query, SQL_FieldNameToNum(Query, lUserMValueName))
     }
 
+    gMissionsLoaded[id] = true
     mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
 }
 
@@ -147,10 +150,15 @@ public sqlAddMissionStatusHandle(FailState, Handle:Query, error[], errorcode, da
 
     if(FailState == TQUERY_CONNECT_FAILED || FailState == TQUERY_QUERY_FAILED)
 	{
-		log_amx("%s^n accountId = ^"%d^"", error, accountId)
-		mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
-		return
+        gMissionsLoaded[id] = false
+        log_amx("%s^n accountId = ^"%d^"", error, accountId)
+        mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
+        return
 	}
+
+    mg_fw_client_clean(id)
+    gMissionsLoaded[id] = true
+    mg_reg_user_sqlload_finished(id, MG_SQLID_MISSIONS)
 }
 
 public sqlUpdateClientMissonsHandle(FailState, Handle:Query, error[], errorcode, data[], datasize, Float:fQueueTime)
@@ -341,6 +349,9 @@ public mg_fw_client_login_process(id, accountId)
 
 public mg_fw_client_sql_save(id, accountId)
 {
+    if(!gMissionsLoaded[id])
+        return
+
     new lSqlTxt[1024], len
     new lArraySize = ArraySize(arrayMissionId)
     new lMissionId
@@ -361,6 +372,7 @@ public mg_fw_client_sql_save(id, accountId)
 public mg_fw_client_clean(id)
 {
     gMissionPoints[id] = 0
+    gMissionsLoaded[id] = false
 
     for(new i; i < MISSIONID_BLOCKSIZE; i++)
     {
@@ -389,7 +401,7 @@ userLoadMissionStatus(id, accountId)
     data[0] = id
     data[1] = accountId
 	
-    formatex(lSqlTxt, charsmax(lSqlTxt), "SELECT * FROM accountStatus WHERE accountId=^"%s^";", accountId)
+    formatex(lSqlTxt, charsmax(lSqlTxt), "SELECT * FROM accountStatus WHERE accountId=^"%d^";", accountId)
     SQL_ThreadQuery(gSqlMissionTuple, "sqlLoadMissionStatusHandle", lSqlTxt, data, 2)
 	
     return true
