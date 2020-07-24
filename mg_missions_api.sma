@@ -34,7 +34,7 @@ public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR)
 
-    gForwardClientMissionDone = CreateMultiForward("mg_fw_client_mission_done", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, missionPrizeExp
+    gForwardClientMissionDone = CreateMultiForward("mg_fw_client_mission_done", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL, FP_CELL)// id, missionId, missionPrizeExp, missionPrizeMP
     gForwardClientMissionAvailable = CreateMultiForward("mg_fw_client_mission_unlocked", ET_CONTINUE, FP_CELL, FP_CELL, FP_CELL)// id, missionId, unlockerMissionId
 
     serverLoadMissionList()
@@ -438,9 +438,16 @@ userCheckMissionStatus(id, missionId)
     
     if(gMissionValue[id][missionId] >= ArrayGetCell(arrayMissionTargetValue, lArrayId))
     {
+        new lNextMissionId = ArrayGetCell(arrayMissionNext, lArrayId)
+        new lMissionPrizeMP = ArrayGetCell(arrayMissionPrizeMP, lArrayId)
+
         gMissionStatus[id][missionId] = 1
-        ExecuteForward(gForwardClientMissionDone, retValue, id, missionId, ArrayGetCell(arrayMissionPrizeExp, lArrayId))
-        gMissionValue[id][ArrayGetCell(arrayMissionNext, lArrayId)] += gMissionValue[id][missionId]
+        ExecuteForward(gForwardClientMissionDone, retValue, id, missionId, ArrayGetCell(arrayMissionPrizeExp, lArrayId), lMissionPrizeMP)
+        gMissionPoints[id] += lMissionPrizeMP
+
+        if(lNextMissionId != -1)
+            gMissionValue[id][lNextMissionId] += gMissionValue[id][missionId]
+
         checkLockedMissions(id, missionId, lArrayId)
     }
 }
