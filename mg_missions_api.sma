@@ -365,7 +365,7 @@ public mg_fw_client_sql_save(id, accountId)
     new lArraySize = ArraySize(arrayMissionId)
     new lMissionId
 
-    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "UPDATE accounStatus SET ")
+    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "UPDATE accountStatus SET ")
     len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "accountMP = ^"%d^"", gMissionPoints[id])
     for(new i; i < lArraySize; i++)
     {
