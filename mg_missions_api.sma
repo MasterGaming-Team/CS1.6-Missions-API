@@ -20,6 +20,7 @@ new Array:arrayMissionId
 new Array:arrayMissionServer
 new Array:arrayMissionName
 new Array:arrayMissionDesc
+new Array:arrayMissionValueName
 new Array:arrayMissionRequired
 new Array:arrayMissionNext
 new Array:arrayMissionTargetValue
@@ -48,6 +49,7 @@ public plugin_natives()
     arrayMissionServer = ArrayCreate(1)
     arrayMissionName = ArrayCreate(64)
     arrayMissionDesc = ArrayCreate(64)
+    arrayMissionValueName = ArrayCreate(64)
     arrayMissionRequired = ArrayCreate(1)
     arrayMissionNext = ArrayCreate(1)
     arrayMissionTargetValue = ArrayCreate(1)
@@ -77,7 +79,9 @@ public sqlLoadMissionListHandle(FailState, Handle:Query, error[], errorcode, dat
         return
 	}
 
-    new lMissionName[64], lMissionDesc[64]
+    new lMissionName[64]
+    new lMissionDesc[64]
+    new lMissionValueName[64]
 
     while(SQL_MoreResults(Query))
     {
@@ -85,11 +89,13 @@ public sqlLoadMissionListHandle(FailState, Handle:Query, error[], errorcode, dat
         {
             SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionName"), lMissionName, charsmax(lMissionName))
             SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionDesc"), lMissionDesc, charsmax(lMissionDesc))
+            SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionValueName"), lMissionValueName, charsmax(lMissionValueName))
 
             ArrayPushCell(arrayMissionId, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionId")))
             ArrayPushCell(arrayMissionServer, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionServer")))
             ArrayPushString(arrayMissionName, lMissionName)
             ArrayPushString(arrayMissionDesc, lMissionDesc)
+            ArrayPushString(arrayMissionValueName, lMissionValueName)
             ArrayPushCell(arrayMissionRequired, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionRequired")))
             ArrayPushCell(arrayMissionNext, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "missionNext")))
             ArrayPushCell(arrayMissionTargetValue, SQL_ReadResult(Query, SQL_FieldNameToNum(Query, "targetValue")))
@@ -184,19 +190,22 @@ public native_arrayid_get(plugin_id, param_num)
         set_param_byref(4, int:arrayMissionDesc)
         
     if(get_param(5) != -1)
-        set_param_byref(5, int:arrayMissionRequired)
-        
+        set_param_byref(5, int:arrayMissionValueName)
+
     if(get_param(6) != -1)
-        set_param_byref(6, int:arrayMissionNext)
+        set_param_byref(6, int:arrayMissionRequired)
         
     if(get_param(7) != -1)
-        set_param_byref(7, int:arrayMissionTargetValue)
+        set_param_byref(7, int:arrayMissionNext)
         
     if(get_param(8) != -1)
-        set_param_byref(8, int:arrayMissionPrizeExp)
+        set_param_byref(8, int:arrayMissionTargetValue)
         
     if(get_param(9) != -1)
-        set_param_byref(9, int:arrayMissionPrizeMP)
+        set_param_byref(9, int:arrayMissionPrizeExp)
+        
+    if(get_param(10) != -1)
+        set_param_byref(10, int:arrayMissionPrizeMP)
 }
 
 public native_client_mpoint_set(plugin_id, param_num)
@@ -352,11 +361,11 @@ public mg_fw_client_sql_save(id, accountId)
     if(!gMissionsLoaded[id])
         return
 
-    new lSqlTxt[1024], len
+    new lSqlTxt[2048], len
     new lArraySize = ArraySize(arrayMissionId)
     new lMissionId
 
-    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "UPDATE missionList SET")
+    len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "UPDATE accounStatus SET ")
     len += formatex(lSqlTxt[len], charsmax(lSqlTxt) - len, "accountMP = ^"%d^"", gMissionPoints[id])
     for(new i; i < lArraySize; i++)
     {
